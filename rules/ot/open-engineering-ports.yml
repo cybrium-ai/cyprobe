@@ -1,0 +1,21 @@
+id: OT-OPEN-ENGINEERING
+title: "Engineering ports exposed on non-engineering subnet"
+severity: critical
+description: >
+  S7comm (102), EtherNet/IP (44818), or BACnet (47808) ports are
+  reachable from a subnet that also carries IT traffic. An attacker
+  who compromises a workstation can directly program or reconfigure
+  PLCs without additional pivoting.
+match_expr: "port in [102, 44818, 47808]"
+cis: []
+nist: ["SC-7", "AC-4"]
+fix:
+  steps: |
+    1. Segment engineering ports behind a jump host or bastion
+       that requires MFA for access.
+    2. Configure switch ACLs or firewall rules to restrict ports
+       102, 44818, and 47808 to the engineering VLAN only.
+    3. Deploy network monitoring on the engineering VLAN to detect
+       anomalous access patterns.
+  risk: low
+  reversible: "yes"

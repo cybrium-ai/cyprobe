@@ -1,0 +1,22 @@
+id: OT-UNENCRYPTED-MODBUS
+title: "Modbus TCP without TLS wrapper"
+severity: high
+description: >
+  Modbus TCP transmits register reads/writes in cleartext. An attacker
+  on the OT network can sniff process values, replay commands, or
+  inject rogue function codes to manipulate physical processes.
+protocol: modbus_tcp
+match_expr: "protocol == modbus_tcp && port == 502"
+cis: []
+nist: ["SI-4", "SC-8"]
+fix:
+  steps: |
+    1. Deploy a Modbus/TCP-to-TLS gateway (e.g. stunnel, mGuard)
+       in front of the PLC. Terminate TLS on the gateway; the PLC
+       continues to speak plain Modbus on the loopback side.
+    2. Restrict port 502 to the gateway's IP only (host firewall
+       or switch ACL).
+    3. Rotate any credentials exchanged over the previously
+       unencrypted channel.
+  risk: medium
+  reversible: "yes"

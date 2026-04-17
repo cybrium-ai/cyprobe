@@ -1,0 +1,22 @@
+id: OT-UNENCRYPTED-DNP3
+title: "DNP3 without Secure Authentication"
+severity: high
+description: >
+  DNP3 traffic observed without IEC 62351-5 Secure Authentication.
+  An attacker can forge DNP3 commands (direct operate, freeze,
+  cold restart) to manipulate RTUs and substations.
+protocol: dnp3
+match_expr: "protocol == dnp3 && port == 20000"
+cis: []
+nist: ["SC-8", "IA-3"]
+fix:
+  steps: |
+    1. Enable DNP3 Secure Authentication (SA v5) on both master
+       and outstation. Most modern RTUs support SA — check the
+       vendor's firmware release notes.
+    2. If SA is not supported, wrap DNP3 in a TLS tunnel
+       (OpenDNP3 supports TLS natively).
+    3. Segment the DNP3 subnet from the IT network with a
+       unidirectional gateway (Waterfall, Owl).
+  risk: medium
+  reversible: "yes"
