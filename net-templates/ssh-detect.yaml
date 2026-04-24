@@ -1,0 +1,15 @@
+id: ssh-detect
+name: "SSH Service Detection"
+severity: info
+description: "Detects SSH servers by reading the protocol version banner. Identifies SSH protocol version and server software."
+tags: [ssh, network, service-detection, remote-access]
+cwe: [CWE-200]
+remediation: "Disable SSH protocol version 1. Disable weak key exchange algorithms and ciphers. Use Ed25519 or RSA-4096 host keys. Restrict access via AllowUsers/AllowGroups. Disable password authentication in favor of key-based auth."
+ports: [22]
+steps:
+  - read_size: 256
+matchers:
+  - type: word
+    words: ["SSH-2.0", "SSH-1"]
+    condition: or
+matchers_condition: or

@@ -1,0 +1,15 @@
+id: vnc-detect
+name: "VNC Service Detection"
+severity: medium
+description: "Detects VNC (Virtual Network Computing) remote desktop services by matching the RFB protocol banner. VNC traffic is often unencrypted and vulnerable to brute-force attacks."
+tags: [vnc, remote-access, network, service-detection]
+cwe: [CWE-200, CWE-319]
+remediation: "Tunnel VNC through SSH or VPN. Use strong VNC passwords. Restrict access via firewall to trusted IPs only. Consider replacing VNC with more secure alternatives."
+ports: [5900, 5901, 5902, 5903]
+steps:
+  - read_size: 256
+matchers:
+  - type: word
+    words: ["RFB 003.", "RFB 004."]
+    condition: or
+matchers_condition: or

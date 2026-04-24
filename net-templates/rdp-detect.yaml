@@ -1,0 +1,15 @@
+id: rdp-detect
+name: "RDP Service Detection"
+severity: medium
+description: "Detects Remote Desktop Protocol services. RDP exposed to the internet is a common attack vector for brute-force and BlueKeep-style exploits. NLA (Network Level Authentication) should be enforced."
+tags: [rdp, remote-access, network, service-detection, windows]
+cwe: [CWE-200, CWE-287]
+remediation: "Restrict RDP access via VPN or jump host. Enable Network Level Authentication (NLA). Use strong passwords and account lockout policies. Apply all security patches to prevent exploits like BlueKeep (CVE-2019-0708)."
+ports: [3389]
+steps:
+  - read_size: 1024
+matchers:
+  - type: word
+    words: ["\x03\x00", "RDP", "Microsoft Terminal"]
+    condition: or
+matchers_condition: or

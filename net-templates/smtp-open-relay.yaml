@@ -1,0 +1,21 @@
+id: smtp-open-relay
+name: "SMTP Open Relay Detection"
+severity: high
+description: "Detects SMTP servers that may be configured as open relays by testing whether the server accepts mail from external domains to external recipients. Open relays are abused for spam and phishing."
+tags: [smtp, email, open-relay, network, misconfiguration]
+cwe: [CWE-284, CWE-269]
+remediation: "Configure SMTP to reject relay attempts from unauthorized senders. Require authentication for sending mail. Restrict MAIL FROM and RCPT TO to authorized domains."
+ports: [25, 587]
+steps:
+  - read_size: 1024
+  - data: "EHLO openrelaytest.local\r\n"
+    read_size: 1024
+  - data: "MAIL FROM:<test@external-domain.com>\r\n"
+    read_size: 512
+  - data: "RCPT TO:<test@another-external.com>\r\n"
+    read_size: 512
+matchers:
+  - type: word
+    words: ["250 2.1.5", "250 2.1.0", "250 Accepted"]
+    condition: or
+matchers_condition: or

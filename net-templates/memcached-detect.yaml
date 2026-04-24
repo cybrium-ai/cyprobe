@@ -1,0 +1,16 @@
+id: memcached-detect
+name: "Memcached Service Detection"
+severity: medium
+description: "Detects Memcached instances by sending a stats command. Exposed Memcached services can leak cached data and are frequently abused for DDoS amplification attacks."
+tags: [memcached, cache, network, service-detection]
+cwe: [CWE-200]
+remediation: "Bind Memcached to localhost or internal interfaces only. Enable SASL authentication. Use firewall rules to block external access to port 11211. Disable UDP protocol to prevent amplification attacks."
+ports: [11211]
+steps:
+  - data: "stats\r\n"
+    read_size: 4096
+matchers:
+  - type: word
+    words: ["STAT pid", "STAT uptime", "STAT version"]
+    condition: or
+matchers_condition: or

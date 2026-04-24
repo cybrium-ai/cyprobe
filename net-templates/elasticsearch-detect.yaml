@@ -1,0 +1,15 @@
+id: elasticsearch-detect
+name: "Elasticsearch Service Detection"
+severity: medium
+description: "Detects Elasticsearch instances by reading the HTTP JSON banner which contains cluster information. Unauthenticated Elasticsearch exposes all indexed data."
+tags: [elasticsearch, database, search, network, service-detection]
+cwe: [CWE-200, CWE-284]
+remediation: "Enable Elasticsearch security features (X-Pack Security). Require authentication for all access. Bind to internal interfaces only. Use TLS for transport and HTTP layers. Disable dangerous scripting features."
+ports: [9200]
+steps:
+  - read_size: 2048
+matchers:
+  - type: word
+    words: ["cluster_name", "cluster_uuid", "tagline", "You Know, for Search"]
+    condition: or
+matchers_condition: or

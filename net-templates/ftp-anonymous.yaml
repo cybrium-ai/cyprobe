@@ -1,0 +1,19 @@
+id: ftp-anonymous
+name: "FTP Anonymous Login Detection"
+severity: high
+description: "Detects FTP servers that permit anonymous login. Anonymous FTP access can expose sensitive files and allow unauthorized uploads."
+tags: [ftp, anonymous, network, misconfiguration]
+cwe: [CWE-284, CWE-287]
+remediation: "Disable anonymous FTP access unless explicitly required. If needed, restrict anonymous users to a read-only chroot directory with no sensitive content."
+ports: [21]
+steps:
+  - read_size: 1024
+  - data: "USER anonymous\r\n"
+    read_size: 1024
+  - data: "PASS anonymous@test.com\r\n"
+    read_size: 1024
+matchers:
+  - type: word
+    words: ["230 Login successful", "230 Anonymous access", "230 User logged in", "Anonymous login ok"]
+    condition: or
+matchers_condition: or

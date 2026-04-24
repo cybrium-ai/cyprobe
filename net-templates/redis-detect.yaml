@@ -1,0 +1,16 @@
+id: redis-detect
+name: "Redis Service Detection"
+severity: medium
+description: "Detects Redis key-value store instances by sending an INFO command and checking for a valid response. Unauthenticated Redis instances can lead to data exfiltration and remote code execution."
+tags: [redis, database, network, service-detection]
+cwe: [CWE-200]
+remediation: "Require authentication via requirepass in redis.conf. Bind Redis to localhost or internal interfaces only. Use TLS for transport encryption and restrict access with firewall rules."
+ports: [6379, 6380]
+steps:
+  - data: "*1\r\n$4\r\ninfo\r\n"
+    read_size: 4096
+matchers:
+  - type: word
+    words: ["redis_version", "redis_mode", "connected_clients"]
+    condition: or
+matchers_condition: or

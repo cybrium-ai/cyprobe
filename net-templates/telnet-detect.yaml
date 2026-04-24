@@ -1,0 +1,15 @@
+id: telnet-detect
+name: "Telnet Service Detection"
+severity: high
+description: "Detects Telnet services which transmit credentials and data in cleartext. Telnet should be replaced with SSH in all environments."
+tags: [telnet, cleartext, network, service-detection, insecure-protocol]
+cwe: [CWE-319, CWE-200]
+remediation: "Disable Telnet and replace with SSH for all remote administration. If Telnet is required for legacy devices, restrict access to a management VLAN with strict firewall rules."
+ports: [23]
+steps:
+  - read_size: 512
+matchers:
+  - type: word
+    words: ["login:", "Password:", "Username:", "\xff\xfd", "\xff\xfb"]
+    condition: or
+matchers_condition: or

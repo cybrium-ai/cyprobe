@@ -1,0 +1,16 @@
+id: mongodb-detect
+name: "MongoDB Service Detection"
+severity: medium
+description: "Detects MongoDB database instances by sending an isMaster command. Unauthenticated MongoDB instances expose all databases to the network."
+tags: [mongodb, database, network, service-detection]
+cwe: [CWE-200]
+remediation: "Enable authentication with --auth flag. Bind to internal interfaces only. Enable TLS and configure role-based access control."
+ports: [27017]
+steps:
+  - data: ":\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd4\x07\x00\x00\x00\x00\x00\x00admin.$cmd\x00\x00\x00\x00\x00\x01\x00\x00\x00\x15\x00\x00\x00\x10isMaster\x00\x01\x00\x00\x00\x00"
+    read_size: 4096
+matchers:
+  - type: word
+    words: ["ismaster", "maxBsonObjectSize", "maxMessageSizeBytes"]
+    condition: or
+matchers_condition: or

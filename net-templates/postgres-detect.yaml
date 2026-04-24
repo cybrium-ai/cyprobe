@@ -1,0 +1,15 @@
+id: postgres-detect
+name: "PostgreSQL Service Detection"
+severity: info
+description: "Detects PostgreSQL database instances by reading the server banner or error response which typically contains version or authentication information."
+tags: [postgresql, database, network, service-detection]
+cwe: [CWE-200]
+remediation: "Restrict PostgreSQL access to trusted hosts via pg_hba.conf. Disable remote connections unless required. Use SSL/TLS for client connections. Use strong passwords and disable default postgres superuser remote login."
+ports: [5432]
+steps:
+  - read_size: 1024
+matchers:
+  - type: word
+    words: ["PostgreSQL", "FATAL", "pg_hba.conf", "authentication"]
+    condition: or
+matchers_condition: or

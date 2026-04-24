@@ -1,0 +1,14 @@
+id: mysql-detect
+name: "MySQL/MariaDB Service Detection"
+severity: info
+description: "Detects MySQL or MariaDB database instances by reading the server greeting banner which contains version information."
+tags: [mysql, mariadb, database, network, service-detection]
+cwe: [CWE-200]
+remediation: "Restrict MySQL access to trusted hosts via bind-address and firewall rules. Disable remote root login. Use TLS for client connections."
+ports: [3306]
+steps:
+  - read_size: 1024
+matchers:
+  - type: regex
+    pattern: "5\\.\\d|8\\.\\d|MariaDB|mysql_native_password"
+matchers_condition: or
