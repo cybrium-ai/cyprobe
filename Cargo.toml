@@ -1,6 +1,6 @@
 [package]
 name = "cyprobe"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Cybrium <eng@cybrium.ai>"]
 description = "OT/SCADA network discovery and posture probe"
@@ -36,6 +36,11 @@ reqwest = { version = "0.12", features = ["json"] }
 # Error handling
 anyhow = "1"
 thiserror = "2"
+
+# Network scan templates
+hex = "0.4"
+regex = "1"
+dirs = "5"
 
 # IP/CIDR parsing
 ipnet = "2"
