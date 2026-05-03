@@ -24,12 +24,12 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-24.04-arm
             artifact: cyprobe-linux-arm64
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            artifact: cyprobe-windows-amd64.exe
-          - target: aarch64-pc-windows-msvc
-            os: windows-latest
-            artifact: cyprobe-windows-arm64.exe
+          # Windows builds disabled: cyprobe links against libpcap, and
+          # Windows needs Npcap SDK (Packet.lib) at link time. Adding
+          # Npcap to the runner pulls a redistribution licence question
+          # we haven't sorted yet. cyprobe is OT/SCADA discovery —
+          # Linux + macOS cover the realistic deployment surface.
+          # Restore when Npcap setup is figured out.
 
     runs-on: ${{ matrix.os }}
     steps:
