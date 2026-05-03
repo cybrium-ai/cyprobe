@@ -91,3 +91,89 @@ jobs:
           files: |
             cyprobe-*
             checksums-sha256.txt
+
+      # ── Auto-publish Homebrew formula to cybrium-ai/homebrew-cli ──
+      #
+      # Renders Formula/cyprobe.rb with the new version + URLs +
+      # SHA256s pulled from checksums-sha256.txt, then commits to the
+      # tap repo. Same direct-commit pattern cyscan uses. End users on
+      # `brew upgrade cybrium-ai/cli/cyprobe` get the new binary as
+      # soon as this step completes.
+      - name: Resolve version
+        id: ver
+        run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract per-platform SHA256s
+        id: sums
+        run: |
+          {
+            echo "darwin_arm64_sha=$(awk '/cyprobe-darwin-arm64$/  {print $1}' checksums-sha256.txt)"
+            echo "darwin_amd64_sha=$(awk '/cyprobe-darwin-amd64$/  {print $1}' checksums-sha256.txt)"
+            echo "linux_arm64_sha=$(awk  '/cyprobe-linux-arm64$/   {print $1}' checksums-sha256.txt)"
+            echo "linux_amd64_sha=$(awk  '/cyprobe-linux-amd64$/   {print $1}' checksums-sha256.txt)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: cybrium-ai/homebrew-cli
+          token:      ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path:       homebrew-cli
+
+      - name: Render + commit Formula/cyprobe.rb
+        run: |
+          VERSION="${{ steps.ver.outputs.tag }}"
+          BASE="https://github.com/cybrium-ai/cyprobe/releases/download/v${VERSION}"
+          mkdir -p homebrew-cli/Formula
+          cat > homebrew-cli/Formula/cyprobe.rb <<RUBY
+          class Cyprobe < Formula
+            desc     "Cybrium Probe — OT/SCADA security scanner (Modbus, DNP3, BACnet)"
+            homepage "https://github.com/cybrium-ai/cyprobe"
+            license  "Apache-2.0"
+            version  "${VERSION}"
+
+            on_macos do
+              on_arm do
+                url    "${BASE}/cyprobe-darwin-arm64"
+                sha256 "${{ steps.sums.outputs.darwin_arm64_sha }}"
+              end
+              on_intel do
+                url    "${BASE}/cyprobe-darwin-amd64"
+                sha256 "${{ steps.sums.outputs.darwin_amd64_sha }}"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url    "${BASE}/cyprobe-linux-arm64"
+                sha256 "${{ steps.sums.outputs.linux_arm64_sha }}"
+              end
+              on_intel do
+                url    "${BASE}/cyprobe-linux-amd64"
+                sha256 "${{ steps.sums.outputs.linux_amd64_sha }}"
+              end
+            end
+
+            def install
+              if OS.mac? && Hardware::CPU.arm?
+                bin.install "cyprobe-darwin-arm64" => "cyprobe"
+              elsif OS.mac?
+                bin.install "cyprobe-darwin-amd64" => "cyprobe"
+              elsif OS.linux? && Hardware::CPU.arm?
+                bin.install "cyprobe-linux-arm64" => "cyprobe"
+              else
+                bin.install "cyprobe-linux-amd64" => "cyprobe"
+              end
+            end
+
+            test do
+              assert_match "cyprobe", shell_output("#{bin}/cyprobe --version")
+            end
+          end
+          RUBY
+          cd homebrew-cli
+          git config user.name  "cybrium-bot"
+          git config user.email "bot@cybrium.ai"
+          git add Formula/cyprobe.rb
+          git commit -m "cyprobe: bump to v${VERSION}" || echo "no changes"
+          git push
