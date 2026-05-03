@@ -9,6 +9,7 @@ mod output;
 mod passive;
 mod protocols;
 mod rules;
+mod hardware_rot;
 mod self_update;
 
 #[derive(Parser)]
@@ -162,6 +163,11 @@ enum Command {
 
     /// Show version and check for updates
     Version,
+
+    /// Report this host's hardware Root of Trust (TPM / Secure Enclave).
+    /// Detection only — feeds device-fingerprint and tamper-detection
+    /// flows. Output is JSON: {kind, vendor, present}.
+    Rot,
 }
 
 #[tokio::main]
@@ -272,6 +278,12 @@ async fn main() -> Result<()> {
 
         Command::Version => {
             self_update::version("cybrium-ai/cyprobe").await;
+            Ok(())
+        }
+
+        Command::Rot => {
+            let r = hardware_rot::detect();
+            println!("{}", serde_json::to_string_pretty(&r)?);
             Ok(())
         }
     }
