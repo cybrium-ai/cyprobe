@@ -1,6 +1,6 @@
 [package]
 name = "cyprobe"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 authors = ["Cybrium <eng@cybrium.ai>"]
 description = "OT/SCADA network discovery and posture probe"

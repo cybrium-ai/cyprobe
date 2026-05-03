@@ -24,12 +24,12 @@ jobs:
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-24.04-arm
             artifact: cyprobe-linux-arm64
-          # Windows builds disabled: cyprobe links against libpcap, and
-          # Windows needs Npcap SDK (Packet.lib) at link time. Adding
-          # Npcap to the runner pulls a redistribution licence question
-          # we haven't sorted yet. cyprobe is OT/SCADA discovery —
-          # Linux + macOS cover the realistic deployment surface.
-          # Restore when Npcap setup is figured out.
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact: cyprobe-windows-amd64.exe
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+            artifact: cyprobe-windows-arm64.exe
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -39,6 +39,21 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
+      # Windows: pnet uses Npcap as its packet source. Need the Npcap
+      # SDK (header + import-lib) on the runner so link.exe finds
+      # `Packet.lib` / `wpcap.lib`. SDK is build-time only; we don't
+      # redistribute it. End users install Npcap themselves at runtime
+      # (one-line README note ships in the release zip).
+      - name: Install Npcap SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sdk = "$env:RUNNER_TEMP\npcap-sdk"
+          Invoke-WebRequest -Uri https://npcap.com/dist/npcap-sdk-1.13.zip -OutFile "$env:RUNNER_TEMP\npcap-sdk.zip"
+          Expand-Archive "$env:RUNNER_TEMP\npcap-sdk.zip" -DestinationPath $sdk
+          $arch = if ('${{ matrix.target }}' -eq 'aarch64-pc-windows-msvc') { 'ARM64' } else { 'x64' }
+          "LIB=$sdk\Lib\$arch;$env:LIB" >> $env:GITHUB_ENV
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
