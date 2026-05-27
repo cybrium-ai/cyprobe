@@ -20,7 +20,7 @@ jobs:
             os: macos-14
             artifact: cyprobe-darwin-amd64
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+            os: cybrium-ai-linux
             artifact: cyprobe-linux-amd64
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-24.04-arm
