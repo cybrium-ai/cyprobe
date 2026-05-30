@@ -67,6 +67,23 @@ jobs:
         if: runner.os == 'Windows'
         run: cp target/${{ matrix.target }}/release/cyprobe.exe ${{ matrix.artifact }}
 
+      # ── MSI installer (Windows x86_64 only) ────────────────────────
+      # cargo-wix builds a Windows MSI from wix/main.wxs for x86_64.
+      # ARM64 Windows skipped — WiX MSIs are typically x86_64 only.
+      # MSI is signed alongside the .exe (files-folder-filter exe,msi).
+      - name: Install cargo-wix
+        if: runner.os == 'Windows' && matrix.target == 'x86_64-pc-windows-msvc'
+        run: cargo install cargo-wix --version 0.3.9
+
+      - name: Build MSI installer
+        if: runner.os == 'Windows' && matrix.target == 'x86_64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          cargo wix --no-build --nocapture `
+            --target ${{ matrix.target }} `
+            --output cyprobe-windows-amd64.msi
+          Get-ChildItem cyprobe-*
+
       # ── Azure Trusted Signing (Windows binaries only) ──────────────
       # azure/login MUST run before trusted-signing-action so the
       # DefaultAzureCredential chain finds the OIDC token. FIC subject
@@ -89,25 +106,37 @@ jobs:
           trusted-signing-account-name: cybrium-signing
           certificate-profile-name:     cybrium
           files-folder:                 .
-          files-folder-filter:          exe
+          files-folder-filter:          exe,msi
           file-digest:                  SHA256
           timestamp-rfc3161:            http://timestamp.acs.microsoft.com
           timestamp-digest:             SHA256
 
-      - name: Verify Windows signature
+      - name: Verify Windows signatures (exe + optional msi)
         if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/v')
         shell: pwsh
         run: |
-          $sig = Get-AuthenticodeSignature "${{ matrix.artifact }}"
-          Write-Host "Signature status: $($sig.Status)"
-          Write-Host "Signer: $($sig.SignerCertificate.Subject)"
-          if ($sig.Status -ne 'Valid') { throw "Signature verification failed: $($sig.Status)" }
+          $files = @("${{ matrix.artifact }}")
+          if (Test-Path "cyprobe-windows-amd64.msi") { $files += "cyprobe-windows-amd64.msi" }
+          foreach ($file in $files) {
+            $sig = Get-AuthenticodeSignature $file
+            Write-Host "$file"
+            Write-Host "  Status: $($sig.Status)"
+            Write-Host "  Signer: $($sig.SignerCertificate.Subject)"
+            if ($sig.Status -ne 'Valid') { throw "Signature verification failed for $file : $($sig.Status)" }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
+
+      - name: Upload MSI artifact
+        if: runner.os == 'Windows' && matrix.target == 'x86_64-pc-windows-msvc'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyprobe-windows-amd64.msi
+          path: cyprobe-windows-amd64.msi
 
   release:
     needs: build
